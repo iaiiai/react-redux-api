@@ -14,8 +14,17 @@ module.exports = {
     } ),
     new CleanWebpackPlugin(),
   ],
+  resolve: {
+    extensions: ['.js', '.json', '.jsx'],
+  },
   module: {
     rules: [
+      
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      },
+
       {
         test: /\.(js|jsx)?$/,
         exclude: /(node_modules)/,
@@ -24,9 +33,10 @@ module.exports = {
           options: {
             presets: ['@babel/preset-env', '@babel/preset-react']
           }
-        }
+        },
       }
-    ]
+      
+    ],
   }, 
   devServer: {
     contentBase: path.resolve(__dirname, 'dist'),
