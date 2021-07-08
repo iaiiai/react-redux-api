@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "dev": "npx webpack serve"
+    "dev": "npx webpack serve",
+    "deploy": "surge --project ./dist --domain rrca.surge.sh"
   },
   "author": "",
   "license": "ISC",

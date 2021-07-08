@@ -9,8 +9,6 @@ const Pagination = ({ postsPerPage, totalPosts, paginate }) => {
     return getPageNumbers([...result, index], index+1);
   };
 
-  console.log('-->', getPageNumbers());
-
   return (
     <nav>
       <ul className="pagination">
