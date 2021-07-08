@@ -1,42 +1,68 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
-import { BottomNavigation, BottomNavigationAction, Typography, Button } from '@material-ui/core';
-import { Skeleton } from '@material-ui/lab';
-import { Visibility, LibraryBooks} from '@material-ui/icons';
 import Post from './Post';
 import Comment from './Comment';
-import { fetchPosts } from '../store/actions';
+import Pagination from './Pagination';
+import { savePosts } from '../store/actions';
+import { Typography, Button } from '@material-ui/core';
+import { Skeleton, Alert } from '@material-ui/lab';
+import { spacing } from '@material-ui/system';
 
 
 const App = () => {
   
   const dispatch = useDispatch();
-  const [navState, setNavState] = useState(false);
+  const [isPostsBoardActive, setPostsBoardActive] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage, setPostsPerPage] = useState(10);
   const loadedPosts = useSelector((state) => state.posts);
   const currentPost = useSelector((state) => state.currentPost);
   const comments = useSelector((state) => state.comments);
-  console.log(loadedPosts.length);
-  console.log(navState);
-  const savePosts = () => async (dispatch) => {
-    try {
-      const posts = await axios.get('https://jsonplaceholder.typicode.com/posts');
-      dispatch(fetchPosts(posts.data));
-    } catch (error) {
-      throw error;
-    }
+  const requestState = useSelector((state) => state.requestState);
+
+  const showRequestStatus = (requestState) => {
+    
+    const showSuccess = () => {
+      return <Alert severity="success">Posts successfully loaded.</Alert>
+    };
+
+    const showPending = () => {
+      return <Alert severity="warning">Loading posts</Alert>
+    };
+
+    const showFailure = () => {
+      return <Alert severity="error">Something went wrong, please try again.</Alert>
+    };
+
+    const requestTypes = {
+      SUCCESS: showSuccess,
+      PENDING: showPending,
+      FAILURE: showFailure,
+      'null': () => null,
+    };
+
+    return requestTypes[requestState]();
   };
 
   useEffect(() => dispatch(savePosts()), []);
 
+  const lastPostIndex = currentPage * postsPerPage;
+  const firstPostIndex = lastPostIndex - postsPerPage;
+  const currentPagePosts = loadedPosts.slice(firstPostIndex, lastPostIndex);
+
+  const paginate = (number) => setCurrentPage(number);
+
   return (
     <div>
       <Typography variant="h1"><b>Fake</b>Posts</Typography>
-      <Button variant="contained" color="secondary" onClick={() => setNavState(!navState)}>
-        {navState ? 'Show posts' : 'Hide posts'}
-      </Button>
-      <div className="row" id="showPosts" style={ { display: navState ? 'none' : '' } }>
-        {loadedPosts.map((post) => (<Post post={post} key={post.id}/>))}
+      {showRequestStatus(requestState)}
+      <div className="mt-3 mb-3">
+        <Button variant="contained" color="secondary" onClick={() => setPostsBoardActive(!isPostsBoardActive)}>
+          {isPostsBoardActive ? 'Show posts' : 'Hide posts'}
+        </Button>
+      </div>
+      <div className="row" id="showPosts" style={ { display: isPostsBoardActive ? 'none' : '' } }>
+        {currentPagePosts.map((post) => (<Post post={post} key={post.id}/>))}
       </div>
       <div className="row">
         <div className="col-md-5 mt-3">
@@ -50,14 +76,11 @@ const App = () => {
           </ul>
         </div>
         <div className="col-md-3 mt-3">
-        <Typography variant="h6">Written by user (id)</Typography>
-            { currentPost ? <Typography variant="h6">{currentPost.userId}</Typography> : <Typography variant="h6">Nothing to show.</Typography> }
+        <Typography variant="h6">Written by user: </Typography>
+            { currentPost ? <Typography variant="h6">@{currentPost.author}</Typography> : <Typography variant="h6">Nothing to show.</Typography> }
         </div>
       </div>
-      <BottomNavigation value={navState} onChange={(event, newValue) => setNavState(newValue)}>
-        <BottomNavigationAction label="Recent Posts" value={false} icon={<LibraryBooks />} />
-        <BottomNavigationAction label="Current" value={true} icon={<Visibility />} />
-      </BottomNavigation>
+      <Pagination postsPerPage={postsPerPage} totalPosts={100} paginate={paginate}></Pagination>
     </div>
   )
 };
